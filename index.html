@@ -133,7 +133,18 @@ th, td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--li
 th { color: var(--muted); font-weight: 700; font-size: 12px; }
 td.name, th.name { text-align: left; white-space: normal; }
 td.pts { font-weight: 800; }
-tr.top td { background: var(--win); }
+tr.q td:first-child { color: var(--ok); font-weight: 800; }
+tr.cut td { border-bottom: 2px dashed var(--muted); }
+.legend { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+h3.round { margin: 18px 0 2px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+.po { border-top: 1px solid var(--line); }
+.po .match { border-top: 0; }
+.match.pen { padding-top: 0; }
+.match.pen input { height: 34px; font-size: 16px; }
+.pen .team { color: var(--muted); font-size: 13px; }
+.tbd { color: var(--muted); font-weight: 500; font-style: italic; }
+.match input:disabled { opacity: .4; }
+.champ { background: var(--win); border-radius: 10px; padding: 12px; font-weight: 800; font-size: 17px; text-align: center; margin: 8px 0; }
 .table-scroll { overflow-x: auto; }
 .toast {
   position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
@@ -181,6 +192,7 @@ tr.top td { background: var(--win); }
           <tbody id="standings"></tbody>
         </table>
       </div>
+      <p class="legend">Los 8 primeros (arriba de la línea punteada) clasifican a cuartos de final.</p>
     </section>
 
     <section class="card">
@@ -214,28 +226,43 @@ const JORNADAS = [
 const TEAMS = [...new Set(JORNADAS.flat(2))].sort((a, b) => a.localeCompare(b, "es"));
 const STORAGE_KEY = "jornadas-1-8-resultados";
 const TAB_KEY = "jornadas-1-8-tab";
+const LIGUILLA = JORNADAS.length; // índice de la pestaña de liguilla
+const ROUNDS = [
+  { key: "qf", name: "Cuartos de final", n: 4 },
+  { key: "sf", name: "Semifinales", n: 2 },
+  { key: "f", name: "Final", n: 1 }
+];
+// Llave fija: 1° vs 8°, 4° vs 5° (semifinal 1) · 2° vs 7°, 3° vs 6° (semifinal 2)
+const QF_SEEDS = [[1, 8], [4, 5], [2, 7], [3, 6]];
 
 // results[j][m] = [golesLocal, golesVisita] (null si vacío)
-let results = JORNADAS.map(j => j.map(() => [null, null]));
+// playoffs[ronda][i] = [golesLocal, golesVisita, penalesLocal, penalesVisita]
+let results, playoffs;
 let current = 0;
 
 function load() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (Array.isArray(saved)) applyData(saved);
+    if (saved) applyData(saved);
     const t = parseInt(localStorage.getItem(TAB_KEY), 10);
-    if (t >= 0 && t < JORNADAS.length) current = t;
+    if (t >= 0 && t <= LIGUILLA) current = t;
   } catch (e) {}
 }
 function save() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(results)); } catch (e) {}
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(backup())); } catch (e) {}
 }
+const backup = () => ({ liga: results, liguilla: playoffs });
+const norm = v => (v === null || v === "" || v === undefined || isNaN(v)) ? null : Math.max(0, parseInt(v, 10));
+// Acepta el formato nuevo {liga, liguilla} y el anterior (solo el arreglo de la liga).
 function applyData(data) {
+  const liga = Array.isArray(data) ? data : data?.liga;
+  const po = Array.isArray(data) ? null : data?.liguilla;
   results = JORNADAS.map((j, ji) => j.map((_, mi) => {
-    const r = data?.[ji]?.[mi];
-    const norm = v => (v === null || v === "" || v === undefined || isNaN(v)) ? null : Math.max(0, parseInt(v, 10));
+    const r = liga?.[ji]?.[mi];
     return Array.isArray(r) ? [norm(r[0]), norm(r[1])] : [null, null];
   }));
+  playoffs = Object.fromEntries(ROUNDS.map(r => [r.key, Array.from({ length: r.n }, (_, i) =>
+    [0, 1, 2, 3].map(k => norm(po?.[r.key]?.[i]?.[k])))]));
 }
 const done = r => r[0] !== null && r[1] !== null;
 const jornadaDone = ji => results[ji].every(done);
@@ -250,6 +277,11 @@ function renderTabs() {
     b.onclick = () => { current = i; try { localStorage.setItem(TAB_KEY, i); } catch (e) {} renderAll(); };
     nav.appendChild(b);
   });
+  const b = document.createElement("button");
+  b.className = current === LIGUILLA ? "active" : "";
+  b.innerHTML = "Liguilla" + (winner("f", 0) ? '<span class="dot"></span>' : "");
+  b.onclick = () => { current = LIGUILLA; try { localStorage.setItem(TAB_KEY, LIGUILLA); } catch (e) {} renderAll(); };
+  nav.appendChild(b);
 }
 
 function renderJornada() {
@@ -277,18 +309,10 @@ function renderJornada() {
         save();
         updateLive(row, mi);
       });
-      inp.addEventListener("focus", () => inp.select());
-      inp.addEventListener("keydown", e => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          const all = [...sec.querySelectorAll("input")];
-          const next = all[all.indexOf(inp) + 1];
-          if (next) next.focus(); else inp.blur();
-        }
-      });
     });
     sec.appendChild(row);
   });
+  wireInputs(sec);
 }
 
 function updateLive(row, mi) {
@@ -321,7 +345,7 @@ function renderStandings() {
   const tbody = document.getElementById("standings");
   tbody.innerHTML = computeStandings().map((t, i) => {
     const dg = t.gf - t.gc;
-    return `<tr class="${i === 0 && t.pj ? "top" : ""}">
+    return `<tr class="${i < 8 ? "q" : ""} ${i === 7 ? "cut" : ""}">
       <td>${i + 1}</td><td class="name">${t.team}</td><td>${t.pj}</td><td>${t.g}</td><td>${t.e}</td><td>${t.p}</td>
       <td>${t.gf}</td><td>${t.gc}</td><td>${dg > 0 ? "+" + dg : dg}</td><td class="pts">${t.pts}</td></tr>`;
   }).join("");
@@ -334,7 +358,112 @@ function renderProgress() {
   document.getElementById("summary").textContent = `${filled} de ${total} partidos capturados`;
 }
 
-function renderAll() { renderTabs(); renderJornada(); renderStandings(); renderProgress(); }
+function playoffTeams(key, i) {
+  if (key === "qf") {
+    if (!results.flat().some(done)) return [null, null];
+    const st = computeStandings();
+    return QF_SEEDS[i].map(s => ({ name: st[s - 1].team, seed: s }));
+  }
+  const prev = key === "sf" ? "qf" : "sf";
+  return [winner(prev, 2 * i), winner(prev, 2 * i + 1)];
+}
+function winner(key, i) {
+  const [h, a] = playoffTeams(key, i);
+  const m = playoffs[key][i];
+  if (!h || !a || m[0] === null || m[1] === null) return null;
+  if (m[0] !== m[1]) return m[0] > m[1] ? h : a;
+  if (m[2] === null || m[3] === null || m[2] === m[3]) return null;
+  return m[2] > m[3] ? h : a;
+}
+const teamLabel = t => t ? `${t.seed}° ${t.name}` : '<span class="tbd">Por definir</span>';
+
+function renderLiguilla() {
+  const sec = document.getElementById("jornada");
+  const total = results.flat().length, filled = results.flat().filter(done).length;
+  const champ = winner("f", 0);
+  sec.innerHTML = `<h2>Liguilla</h2>
+    <div class="bye">Clasifican los 8 primeros: 1° vs 8°, 4° vs 5°, 2° vs 7° y 3° vs 6°. Si hay empate, se define en penales.
+    ${filled < total ? `<br><b>Tabla provisional: van ${filled} de ${total} partidos.</b>` : ""}</div>
+    ${champ ? `<div class="champ">🏆 Campeón: ${champ.name}</div>` : ""}`;
+  ROUNDS.forEach(r => {
+    const h = document.createElement("h3");
+    h.className = "round"; h.textContent = r.name;
+    sec.appendChild(h);
+    for (let i = 0; i < r.n; i++) sec.appendChild(playoffRow(r.key, i));
+  });
+  sec.querySelectorAll("input[data-po]").forEach(inp => {
+    inp.addEventListener("input", () => {
+      const [key, i, k] = inp.dataset.po.split("-");
+      const m = playoffs[key][+i];
+      m[+k] = norm(inp.value.trim());
+      if (!(m[0] !== null && m[0] === m[1])) m[2] = m[3] = null; // penales solo con empate
+      save();
+    });
+    // Se redibuja al terminar de escribir (pasa el ganador a la siguiente ronda) y se conserva el foco.
+    inp.addEventListener("change", () => setTimeout(() => {
+      const id = document.activeElement?.dataset?.po;
+      renderTabs(); renderLiguilla();
+      if (id) sec.querySelector(`[data-po="${id}"]`)?.focus();
+    }, 0));
+  });
+  wireInputs(sec);
+}
+
+function playoffRow(key, i) {
+  const [home, away] = playoffTeams(key, i);
+  const m = playoffs[key][i];
+  const ready = home && away;
+  const w = winner(key, i);
+  const tie = ready && m[0] !== null && m[0] === m[1];
+  const inp = k => `<input type="number" inputmode="numeric" min="0" max="99" data-po="${key}-${i}-${k}"
+    value="${m[k] ?? ""}" ${ready ? "" : "disabled"} aria-label="${k < 2 ? "Goles" : "Penales"}">`;
+  const div = document.createElement("div");
+  div.className = "po";
+  div.innerHTML = `
+    <div class="match">
+      <div class="team home ${w?.name === home?.name && w ? "w" : ""}">${teamLabel(home)}</div>
+      ${inp(0)}<div class="sep">-</div>${inp(1)}
+      <div class="team away ${w?.name === away?.name && w ? "w" : ""}">${teamLabel(away)}</div>
+    </div>
+    ${tie ? `<div class="match pen"><div class="team home">Penales</div>${inp(2)}<div class="sep">-</div>${inp(3)}<div></div></div>` : ""}`;
+  return div;
+}
+
+// Enter pasa a la siguiente casilla; al enfocar se selecciona el número.
+function wireInputs(sec) {
+  sec.querySelectorAll("input").forEach(inp => {
+    inp.addEventListener("focus", () => inp.select());
+    inp.addEventListener("keydown", e => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      const all = [...sec.querySelectorAll("input:not(:disabled)")];
+      const next = all[all.indexOf(inp) + 1];
+      if (next) next.focus(); else inp.blur();
+    });
+  });
+}
+
+function liguillaLines() {
+  const lines = ["*Liguilla*"];
+  ROUNDS.forEach(r => {
+    lines.push(r.name);
+    for (let i = 0; i < r.n; i++) {
+      const [h, a] = playoffTeams(r.key, i);
+      const m = playoffs[r.key][i];
+      const pen = m[2] !== null && m[3] !== null ? ` (pen. ${m[2]}-${m[3]})` : "";
+      lines.push(`${h ? h.seed + "° " + h.name : "Por definir"} ${m[0] ?? "-"} - ${m[1] ?? "-"} ${a ? a.seed + "° " + a.name : "Por definir"}${pen}`);
+    }
+  });
+  const champ = winner("f", 0);
+  if (champ) lines.push("", `Campeón: ${champ.name}`);
+  return lines;
+}
+
+function renderAll() {
+  renderTabs();
+  if (current === LIGUILLA) renderLiguilla(); else renderJornada();
+  renderStandings(); renderProgress();
+}
 
 function toast(msg) {
   const t = document.getElementById("toast");
@@ -365,6 +494,7 @@ document.getElementById("btnCopy").onclick = async () => {
     });
     lines.push("");
   });
+  lines.push(...liguillaLines());
   const text = lines.join("\n").trim();
   try { await navigator.clipboard.writeText(text); toast("Resultados copiados"); }
   catch (e) { download("resultados.txt", text, "text/plain"); }
@@ -377,11 +507,16 @@ document.getElementById("btnCsv").onclick = () => {
   }));
   rows.push([], ["Pos", "Equipo", "PJ", "G", "E", "P", "GF", "GC", "DG", "PTS"]);
   computeStandings().forEach((t, i) => rows.push([i + 1, t.team, t.pj, t.g, t.e, t.p, t.gf, t.gc, t.gf - t.gc, t.pts]));
+  rows.push([], ["Ronda", "Local", "Goles Local", "Goles Visita", "Visita", "Penales Local", "Penales Visita"]);
+  ROUNDS.forEach(r => { for (let i = 0; i < r.n; i++) {
+    const [h, a] = playoffTeams(r.key, i), m = playoffs[r.key][i];
+    rows.push([r.name, h?.name ?? "", m[0] ?? "", m[1] ?? "", a?.name ?? "", m[2] ?? "", m[3] ?? ""]);
+  } });
   const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
   download("resultados-jornadas-1-8.csv", "﻿" + csv, "text/csv");
 };
 document.getElementById("btnJson").onclick = () =>
-  download("respaldo-jornadas-1-8.json", JSON.stringify(results), "application/json");
+  download("respaldo-jornadas-1-8.json", JSON.stringify(backup()), "application/json");
 document.getElementById("fileImport").onchange = async e => {
   const f = e.target.files[0];
   if (!f) return;
@@ -394,10 +529,11 @@ document.getElementById("fileImport").onchange = async e => {
 document.getElementById("btnPrint").onclick = () => window.print();
 document.getElementById("btnReset").onclick = () => {
   if (!confirm("¿Borrar todos los resultados capturados?")) return;
-  results = JORNADAS.map(j => j.map(() => [null, null]));
+  applyData(null);
   save(); renderAll(); toast("Resultados borrados");
 };
 
+applyData(null);
 load();
 renderAll();
 </script>
