@@ -213,6 +213,12 @@ h3.round { margin: 18px 0 2px; font-size: 13px; text-transform: uppercase; lette
 <div class="toast" id="toast"></div>
 
 <script>
+window.onerror = function (msg) {
+  var el = document.getElementById("jornada");
+  if (el) el.innerHTML = "<h2>Error al cargar</h2><p class='sub'>Tu navegador no pudo abrir la app. Prueba con Chrome o Safari actualizados.<br>(" + msg + ")</p>";
+};
+</script>
+<script>
 const JORNADAS = [
   [["Portales Club","Inter de Miami"],["Holanda","Spurs"],["Enfermos F.C.","Legión F.C."],["Manchester C.","Arsenal"],["Santa F.C.","Alianza"],["Francia 98","Juventus"],["Cuervos","Roots"]],
   [["Bayern","Portales Club"],["Inter de Miami","Holanda"],["Spurs","Enfermos F.C."],["Legión F.C.","Manchester C."],["Arsenal","Santa F.C."],["Alianza","Francia 98"],["Juventus","Cuervos"]],
@@ -252,17 +258,21 @@ function save() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(backup())); } catch (e) {}
 }
 const backup = () => ({ liga: results, liguilla: playoffs });
+// Sin "?." ni "??" para que funcione en celulares y navegadores viejos (WhatsApp, Facebook, iOS antiguos).
+const txt = (v, empty = "") => (v === null || v === undefined) ? empty : v;
+const get = (obj, ...keys) => keys.reduce((o, k) => (o === null || o === undefined) ? undefined : o[k], obj);
+const fromEntries = pairs => pairs.reduce((o, [k, v]) => { o[k] = v; return o; }, {});
 const norm = v => (v === null || v === "" || v === undefined || isNaN(v)) ? null : Math.max(0, parseInt(v, 10));
 // Acepta el formato nuevo {liga, liguilla} y el anterior (solo el arreglo de la liga).
 function applyData(data) {
-  const liga = Array.isArray(data) ? data : data?.liga;
-  const po = Array.isArray(data) ? null : data?.liguilla;
+  const liga = Array.isArray(data) ? data : get(data, "liga");
+  const po = Array.isArray(data) ? null : get(data, "liguilla");
   results = JORNADAS.map((j, ji) => j.map((_, mi) => {
-    const r = liga?.[ji]?.[mi];
+    const r = get(liga, ji, mi);
     return Array.isArray(r) ? [norm(r[0]), norm(r[1])] : [null, null];
   }));
-  playoffs = Object.fromEntries(ROUNDS.map(r => [r.key, Array.from({ length: r.n }, (_, i) =>
-    [0, 1, 2, 3].map(k => norm(po?.[r.key]?.[i]?.[k])))]));
+  playoffs = fromEntries(ROUNDS.map(r => [r.key, Array.from({ length: r.n }, (_, i) =>
+    [0, 1, 2, 3].map(k => norm(get(po, r.key, i, k))))]));
 }
 const done = r => r[0] !== null && r[1] !== null;
 const jornadaDone = ji => results[ji].every(done);
@@ -297,9 +307,9 @@ function renderJornada() {
     const hw = done(r) && r[0] > r[1], aw = done(r) && r[1] > r[0];
     row.innerHTML = `
       <div class="team home ${hw ? "w" : ""}">${home}</div>
-      <input type="number" inputmode="numeric" min="0" max="99" aria-label="Goles ${home}" value="${r[0] ?? ""}">
+      <input type="number" inputmode="numeric" min="0" max="99" aria-label="Goles ${home}" value="${txt(r[0])}">
       <div class="sep">-</div>
-      <input type="number" inputmode="numeric" min="0" max="99" aria-label="Goles ${away}" value="${r[1] ?? ""}">
+      <input type="number" inputmode="numeric" min="0" max="99" aria-label="Goles ${away}" value="${txt(r[1])}">
       <div class="team away ${aw ? "w" : ""}">${away}</div>`;
     const [inH, inA] = row.querySelectorAll("input");
     [inH, inA].forEach((inp, side) => {
@@ -326,7 +336,7 @@ function updateLive(row, mi) {
 }
 
 function computeStandings() {
-  const s = Object.fromEntries(TEAMS.map(t => [t, { team: t, pj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0, pts: 0 }]));
+  const s = fromEntries(TEAMS.map(t => [t, { team: t, pj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0, pts: 0 }]));
   JORNADAS.forEach((j, ji) => j.forEach(([home, away], mi) => {
     const r = results[ji][mi];
     if (!done(r)) return;
@@ -401,9 +411,10 @@ function renderLiguilla() {
     });
     // Se redibuja al terminar de escribir (pasa el ganador a la siguiente ronda) y se conserva el foco.
     inp.addEventListener("change", () => setTimeout(() => {
-      const id = document.activeElement?.dataset?.po;
+      const id = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.po : null;
       renderTabs(); renderLiguilla();
-      if (id) sec.querySelector(`[data-po="${id}"]`)?.focus();
+      const again = id && sec.querySelector(`[data-po="${id}"]`);
+      if (again) again.focus();
     }, 0));
   });
   wireInputs(sec);
@@ -416,14 +427,14 @@ function playoffRow(key, i) {
   const w = winner(key, i);
   const tie = ready && m[0] !== null && m[0] === m[1];
   const inp = k => `<input type="number" inputmode="numeric" min="0" max="99" data-po="${key}-${i}-${k}"
-    value="${m[k] ?? ""}" ${ready ? "" : "disabled"} aria-label="${k < 2 ? "Goles" : "Penales"}">`;
+    value="${txt(m[k])}" ${ready ? "" : "disabled"} aria-label="${k < 2 ? "Goles" : "Penales"}">`;
   const div = document.createElement("div");
   div.className = "po";
   div.innerHTML = `
     <div class="match">
-      <div class="team home ${w?.name === home?.name && w ? "w" : ""}">${teamLabel(home)}</div>
+      <div class="team home ${w && home && w.name === home.name ? "w" : ""}">${teamLabel(home)}</div>
       ${inp(0)}<div class="sep">-</div>${inp(1)}
-      <div class="team away ${w?.name === away?.name && w ? "w" : ""}">${teamLabel(away)}</div>
+      <div class="team away ${w && away && w.name === away.name ? "w" : ""}">${teamLabel(away)}</div>
     </div>
     ${tie ? `<div class="match pen"><div class="team home">Penales</div>${inp(2)}<div class="sep">-</div>${inp(3)}<div></div></div>` : ""}`;
   return div;
@@ -451,7 +462,7 @@ function liguillaLines() {
       const [h, a] = playoffTeams(r.key, i);
       const m = playoffs[r.key][i];
       const pen = m[2] !== null && m[3] !== null ? ` (pen. ${m[2]}-${m[3]})` : "";
-      lines.push(`${h ? h.seed + "° " + h.name : "Por definir"} ${m[0] ?? "-"} - ${m[1] ?? "-"} ${a ? a.seed + "° " + a.name : "Por definir"}${pen}`);
+      lines.push(`${h ? h.seed + "° " + h.name : "Por definir"} ${txt(m[0], "-")} - ${txt(m[1], "-")} ${a ? a.seed + "° " + a.name : "Por definir"}${pen}`);
     }
   });
   const champ = winner("f", 0);
@@ -472,10 +483,10 @@ function toast(msg) {
 }
 async function download(name, text, type) {
   // Dentro del visor de claude.ai se usa la capacidad "downloads"; fuera de él, un enlace normal.
-  const dl = window.claude?.use ? await window.claude.use("downloads").catch(() => null) : null;
+  const dl = window.claude && window.claude.use ? await window.claude.use("downloads").catch(() => null) : null;
   if (dl) {
     try { await dl.save({ filename: name, data: text }); toast("Archivo guardado"); }
-    catch (e) { if (e?.code !== "declined") toast("No se pudo descargar"); }
+    catch (e) { if (!e || e.code !== "declined") toast("No se pudo descargar"); }
     return;
   }
   const a = document.createElement("a");
@@ -490,7 +501,7 @@ document.getElementById("btnCopy").onclick = async () => {
     lines.push(`*Jornada ${ji + 1}*`);
     j.forEach(([h, a], mi) => {
       const r = results[ji][mi];
-      lines.push(`${h} ${r[0] ?? "-"} - ${r[1] ?? "-"} ${a}`);
+      lines.push(`${h} ${txt(r[0], "-")} - ${txt(r[1], "-")} ${a}`);
     });
     lines.push("");
   });
@@ -503,14 +514,14 @@ document.getElementById("btnCsv").onclick = () => {
   const rows = [["Jornada", "Local", "Goles Local", "Goles Visita", "Visita"]];
   JORNADAS.forEach((j, ji) => j.forEach(([h, a], mi) => {
     const r = results[ji][mi];
-    rows.push([ji + 1, h, r[0] ?? "", r[1] ?? "", a]);
+    rows.push([ji + 1, h, txt(r[0]), txt(r[1]), a]);
   }));
   rows.push([], ["Pos", "Equipo", "PJ", "G", "E", "P", "GF", "GC", "DG", "PTS"]);
   computeStandings().forEach((t, i) => rows.push([i + 1, t.team, t.pj, t.g, t.e, t.p, t.gf, t.gc, t.gf - t.gc, t.pts]));
   rows.push([], ["Ronda", "Local", "Goles Local", "Goles Visita", "Visita", "Penales Local", "Penales Visita"]);
   ROUNDS.forEach(r => { for (let i = 0; i < r.n; i++) {
     const [h, a] = playoffTeams(r.key, i), m = playoffs[r.key][i];
-    rows.push([r.name, h?.name ?? "", m[0] ?? "", m[1] ?? "", a?.name ?? "", m[2] ?? "", m[3] ?? ""]);
+    rows.push([r.name, h ? h.name : "", txt(m[0]), txt(m[1]), a ? a.name : "", txt(m[2]), txt(m[3])]);
   } });
   const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
   download("resultados-jornadas-1-8.csv", "﻿" + csv, "text/csv");
