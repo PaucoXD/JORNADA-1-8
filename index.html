@@ -341,7 +341,14 @@ function toast(msg) {
   t.textContent = msg; t.classList.add("show");
   clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 1800);
 }
-function download(name, text, type) {
+async function download(name, text, type) {
+  // Dentro del visor de claude.ai se usa la capacidad "downloads"; fuera de él, un enlace normal.
+  const dl = window.claude?.use ? await window.claude.use("downloads").catch(() => null) : null;
+  if (dl) {
+    try { await dl.save({ filename: name, data: text }); toast("Archivo guardado"); }
+    catch (e) { if (e?.code !== "declined") toast("No se pudo descargar"); }
+    return;
+  }
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([text], { type }));
   a.download = name; a.click();
