@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resultados Jornadas 1-8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f5f7;
+  --card: #ffffff;
+  --text: #1a1a1a;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --accent: #111827;
+  --accent-text: #ffffff;
+  --ok: #16a34a;
+  --win: #dcfce7;
+  --input-bg: #f9fafb;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1115;
+    --card: #181b22;
+    --text: #f3f4f6;
+    --muted: #9ca3af;
+    --line: #2a2f3a;
+    --accent: #f3f4f6;
+    --accent-text: #111827;
+    --ok: #22c55e;
+    --win: #14532d;
+    --input-bg: #0f1115;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1115;
+  --card: #181b22;
+  --text: #f3f4f6;
+  --muted: #9ca3af;
+  --line: #2a2f3a;
+  --accent: #f3f4f6;
+  --accent-text: #111827;
+  --ok: #22c55e;
+  --win: #14532d;
+  --input-bg: #0f1115;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Raleway", system-ui, sans-serif;
+}
+header {
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  padding: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.wrap { max-width: 960px; margin: 0 auto; }
+h1 { margin: 0 0 4px; font-size: 22px; font-weight: 800; letter-spacing: .5px; }
+.sub { color: var(--muted); font-size: 13px; }
+.progress { height: 6px; background: var(--line); border-radius: 3px; margin-top: 10px; overflow: hidden; }
+.progress > div { height: 100%; background: var(--ok); width: 0; transition: width .3s; }
+nav.tabs { display: flex; gap: 6px; overflow-x: auto; padding: 12px 16px 4px; }
+nav.tabs button {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+nav.tabs button.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+nav.tabs button .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); margin-left: 6px; vertical-align: middle; }
+main { padding: 12px 16px 40px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+.card h2 { margin: 0 0 4px; font-size: 18px; font-weight: 800; }
+.bye { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+.match {
+  display: grid;
+  grid-template-columns: 1fr 52px 14px 52px 1fr;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.match:first-of-type { border-top: 0; }
+.team { font-weight: 700; font-size: 15px; overflow-wrap: anywhere; }
+.team.home { text-align: left; }
+.team.away { text-align: right; }
+.team.w { color: var(--ok); }
+.match input {
+  width: 52px;
+  height: 44px;
+  text-align: center;
+  font: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text);
+  -moz-appearance: textfield;
+}
+.match input::-webkit-outer-spin-button,
+.match input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.match input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.sep { text-align: center; color: var(--muted); font-weight: 800; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions button, .actions label {
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.actions .primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.actions .danger { color: #dc2626; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { color: var(--muted); font-weight: 700; font-size: 12px; }
+td.name, th.name { text-align: left; white-space: normal; }
+td.pts { font-weight: 800; }
+tr.top td { background: var(--win); }
+.table-scroll { overflow-x: auto; }
+.toast {
+  position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+  background: var(--accent); color: var(--accent-text);
+  padding: 10px 16px; border-radius: 8px; font-weight: 700; font-size: 14px;
+  opacity: 0; transition: opacity .2s; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+@media (max-width: 420px) {
+  .match { grid-template-columns: 1fr 44px 10px 44px 1fr; gap: 4px; }
+  .match input { width: 44px; height: 40px; font-size: 18px; }
+  .team { font-size: 13px; }
+  th, td { padding: 6px 4px; }
+}
+@media print {
+  header, nav.tabs, .actions { display: none; }
+  .card { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>JORNADA 1 A 8</h1>
+    <div class="sub" id="summary">Captura de resultados</div>
+    <div class="progress"><div id="bar"></div></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="tabs" id="tabs"></nav>
+  <main>
+    <section class="card" id="jornada"></section>
+
+    <section class="card">
+      <h2>Tabla general</h2>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th class="name">Equipo</th><th>PJ</th><th>G</th><th>E</th><th>P</th>
+              <th>GF</th><th>GC</th><th>DG</th><th>PTS</th>
+            </tr>
+          </thead>
+          <tbody id="standings"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Datos</h2>
+      <p class="sub">Los resultados se guardan automáticamente en este navegador.</p>
+      <div class="actions">
+        <button class="primary" id="btnCopy">Copiar resultados</button>
+        <button id="btnCsv">Descargar CSV</button>
+        <button id="btnJson">Respaldo (JSON)</button>
+        <label>Importar JSON<input type="file" id="fileImport" accept="application/json" hidden></label>
+        <button id="btnPrint">Imprimir</button>
+        <button class="danger" id="btnReset">Borrar todo</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const JORNADAS = [
+  [["Portales Club","Inter de Miami"],["Holanda","Spurs"],["Enfermos F.C.","Legión F.C."],["Manchester C.","Arsenal"],["Santa F.C.","Alianza"],["Francia 98","Juventus"],["Cuervos","Roots"]],
+  [["Bayern","Portales Club"],["Inter de Miami","Holanda"],["Spurs","Enfermos F.C."],["Legión F.C.","Manchester C."],["Arsenal","Santa F.C."],["Alianza","Francia 98"],["Juventus","Cuervos"]],
+  [["Holanda","Bayern"],["Enfermos F.C.","Inter de Miami"],["Manchester C.","Spurs"],["Santa F.C.","Legión F.C."],["Francia 98","Arsenal"],["Cuervos","Alianza"],["Roots","Juventus"]],
+  [["Bayern","Enfermos F.C."],["Portales Club","Holanda"],["Inter de Miami","Manchester C."],["Spurs","Santa F.C."],["Legión F.C.","Francia 98"],["Arsenal","Cuervos"],["Alianza","Roots"]],
+  [["Manchester C.","Bayern"],["Enfermos F.C.","Portales Club"],["Santa F.C.","Inter de Miami"],["Francia 98","Spurs"],["Cuervos","Legión F.C."],["Roots","Arsenal"],["Juventus","Alianza"]],
+  [["Bayern","Santa F.C."],["Portales Club","Manchester C."],["Holanda","Enfermos F.C."],["Inter de Miami","Francia 98"],["Spurs","Cuervos"],["Legión F.C.","Roots"],["Arsenal","Juventus"]],
+  [["Francia 98","Bayern"],["Santa F.C.","Portales Club"],["Manchester C.","Holanda"],["Cuervos","Inter de Miami"],["Roots","Spurs"],["Juventus","Legión F.C."],["Alianza","Arsenal"]],
+  [["Bayern","Cuervos"],["Portales Club","Francia 98"],["Holanda","Santa F.C."],["Enfermos F.C.","Manchester C."],["Inter de Miami","Roots"],["Spurs","Juventus"],["Legión F.C.","Alianza"]]
+];
+const TEAMS = [...new Set(JORNADAS.flat(2))].sort((a, b) => a.localeCompare(b, "es"));
+const STORAGE_KEY = "jornadas-1-8-resultados";
+const TAB_KEY = "jornadas-1-8-tab";
+
+// results[j][m] = [golesLocal, golesVisita] (null si vacío)
+let results = JORNADAS.map(j => j.map(() => [null, null]));
+let current = 0;
+
+function load() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (Array.isArray(saved)) applyData(saved);
+    const t = parseInt(localStorage.getItem(TAB_KEY), 10);
+    if (t >= 0 && t < JORNADAS.length) current = t;
+  } catch (e) {}
+}
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(results)); } catch (e) {}
+}
+function applyData(data) {
+  results = JORNADAS.map((j, ji) => j.map((_, mi) => {
+    const r = data?.[ji]?.[mi];
+    const norm = v => (v === null || v === "" || v === undefined || isNaN(v)) ? null : Math.max(0, parseInt(v, 10));
+    return Array.isArray(r) ? [norm(r[0]), norm(r[1])] : [null, null];
+  }));
+}
+const done = r => r[0] !== null && r[1] !== null;
+const jornadaDone = ji => results[ji].every(done);
+
+function renderTabs() {
+  const nav = document.getElementById("tabs");
+  nav.innerHTML = "";
+  JORNADAS.forEach((_, i) => {
+    const b = document.createElement("button");
+    b.className = i === current ? "active" : "";
+    b.innerHTML = `J${i + 1}` + (jornadaDone(i) ? '<span class="dot"></span>' : "");
+    b.onclick = () => { current = i; try { localStorage.setItem(TAB_KEY, i); } catch (e) {} renderAll(); };
+    nav.appendChild(b);
+  });
+}
+
+function renderJornada() {
+  const sec = document.getElementById("jornada");
+  const playing = new Set(JORNADAS[current].flat());
+  const resting = TEAMS.filter(t => !playing.has(t));
+  sec.innerHTML = `<h2>Jornada ${current + 1}</h2>
+    <div class="bye">${resting.length ? "Descansa: " + resting.join(", ") : ""}</div>`;
+  JORNADAS[current].forEach(([home, away], mi) => {
+    const r = results[current][mi];
+    const row = document.createElement("div");
+    row.className = "match";
+    const hw = done(r) && r[0] > r[1], aw = done(r) && r[1] > r[0];
+    row.innerHTML = `
+      <div class="team home ${hw ? "w" : ""}">${home}</div>
+      <input type="number" inputmode="numeric" min="0" max="99" aria-label="Goles ${home}" value="${r[0] ?? ""}">
+      <div class="sep">-</div>
+      <input type="number" inputmode="numeric" min="0" max="99" aria-label="Goles ${away}" value="${r[1] ?? ""}">
+      <div class="team away ${aw ? "w" : ""}">${away}</div>`;
+    const [inH, inA] = row.querySelectorAll("input");
+    [inH, inA].forEach((inp, side) => {
+      inp.addEventListener("input", () => {
+        const v = inp.value.trim();
+        results[current][mi][side] = v === "" ? null : Math.max(0, parseInt(v, 10) || 0);
+        save();
+        updateLive(row, mi);
+      });
+      inp.addEventListener("focus", () => inp.select());
+      inp.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const all = [...sec.querySelectorAll("input")];
+          const next = all[all.indexOf(inp) + 1];
+          if (next) next.focus(); else inp.blur();
+        }
+      });
+    });
+    sec.appendChild(row);
+  });
+}
+
+function updateLive(row, mi) {
+  const r = results[current][mi];
+  const [h, a] = row.querySelectorAll(".team");
+  h.classList.toggle("w", done(r) && r[0] > r[1]);
+  a.classList.toggle("w", done(r) && r[1] > r[0]);
+  renderTabs();
+  renderStandings();
+  renderProgress();
+}
+
+function computeStandings() {
+  const s = Object.fromEntries(TEAMS.map(t => [t, { team: t, pj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0, pts: 0 }]));
+  JORNADAS.forEach((j, ji) => j.forEach(([home, away], mi) => {
+    const r = results[ji][mi];
+    if (!done(r)) return;
+    const H = s[home], A = s[away];
+    H.pj++; A.pj++;
+    H.gf += r[0]; H.gc += r[1]; A.gf += r[1]; A.gc += r[0];
+    if (r[0] > r[1]) { H.g++; A.p++; H.pts += 3; }
+    else if (r[0] < r[1]) { A.g++; H.p++; A.pts += 3; }
+    else { H.e++; A.e++; H.pts++; A.pts++; }
+  }));
+  return Object.values(s).sort((a, b) =>
+    b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc) || b.gf - a.gf || a.team.localeCompare(b.team, "es"));
+}
+
+function renderStandings() {
+  const tbody = document.getElementById("standings");
+  tbody.innerHTML = computeStandings().map((t, i) => {
+    const dg = t.gf - t.gc;
+    return `<tr class="${i === 0 && t.pj ? "top" : ""}">
+      <td>${i + 1}</td><td class="name">${t.team}</td><td>${t.pj}</td><td>${t.g}</td><td>${t.e}</td><td>${t.p}</td>
+      <td>${t.gf}</td><td>${t.gc}</td><td>${dg > 0 ? "+" + dg : dg}</td><td class="pts">${t.pts}</td></tr>`;
+  }).join("");
+}
+
+function renderProgress() {
+  const total = results.flat().length;
+  const filled = results.flat().filter(done).length;
+  document.getElementById("bar").style.width = (filled / total * 100) + "%";
+  document.getElementById("summary").textContent = `${filled} de ${total} partidos capturados`;
+}
+
+function renderAll() { renderTabs(); renderJornada(); renderStandings(); renderProgress(); }
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 1800);
+}
+function download(name, text, type) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+document.getElementById("btnCopy").onclick = async () => {
+  const lines = [];
+  JORNADAS.forEach((j, ji) => {
+    lines.push(`*Jornada ${ji + 1}*`);
+    j.forEach(([h, a], mi) => {
+      const r = results[ji][mi];
+      lines.push(`${h} ${r[0] ?? "-"} - ${r[1] ?? "-"} ${a}`);
+    });
+    lines.push("");
+  });
+  const text = lines.join("\n").trim();
+  try { await navigator.clipboard.writeText(text); toast("Resultados copiados"); }
+  catch (e) { download("resultados.txt", text, "text/plain"); }
+};
+document.getElementById("btnCsv").onclick = () => {
+  const rows = [["Jornada", "Local", "Goles Local", "Goles Visita", "Visita"]];
+  JORNADAS.forEach((j, ji) => j.forEach(([h, a], mi) => {
+    const r = results[ji][mi];
+    rows.push([ji + 1, h, r[0] ?? "", r[1] ?? "", a]);
+  }));
+  rows.push([], ["Pos", "Equipo", "PJ", "G", "E", "P", "GF", "GC", "DG", "PTS"]);
+  computeStandings().forEach((t, i) => rows.push([i + 1, t.team, t.pj, t.g, t.e, t.p, t.gf, t.gc, t.gf - t.gc, t.pts]));
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+  download("resultados-jornadas-1-8.csv", "﻿" + csv, "text/csv");
+};
+document.getElementById("btnJson").onclick = () =>
+  download("respaldo-jornadas-1-8.json", JSON.stringify(results), "application/json");
+document.getElementById("fileImport").onchange = async e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try {
+    applyData(JSON.parse(await f.text()));
+    save(); renderAll(); toast("Respaldo importado");
+  } catch (err) { toast("Archivo no válido"); }
+  e.target.value = "";
+};
+document.getElementById("btnPrint").onclick = () => window.print();
+document.getElementById("btnReset").onclick = () => {
+  if (!confirm("¿Borrar todos los resultados capturados?")) return;
+  results = JORNADAS.map(j => j.map(() => [null, null]));
+  save(); renderAll(); toast("Resultados borrados");
+};
+
+load();
+renderAll();
+</script>
+</body>
+</html>
