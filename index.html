@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Resultados Jornadas 1-8</title>
+<title>Resultados Jornadas 1-15</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -168,7 +168,7 @@ h3.round { margin: 18px 0 2px; font-size: 13px; text-transform: uppercase; lette
 <body>
 <header>
   <div class="wrap">
-    <h1>JORNADA 1 A 8</h1>
+    <h1>JORNADAS 1 A 15</h1>
     <div class="sub" id="summary">Captura de resultados</div>
     <div class="progress"><div id="bar"></div></div>
   </div>
@@ -220,18 +220,26 @@ window.onerror = function (msg) {
 </script>
 <script>
 const JORNADAS = [
-  [["Portales Club","Inter de Miami"],["Holanda","Spurs"],["Enfermos F.C.","Legión F.C."],["Manchester C.","Arsenal"],["Santa F.C.","Alianza"],["Francia 98","Juventus"],["Cuervos","Roots"]],
-  [["Bayern","Portales Club"],["Inter de Miami","Holanda"],["Spurs","Enfermos F.C."],["Legión F.C.","Manchester C."],["Arsenal","Santa F.C."],["Alianza","Francia 98"],["Juventus","Cuervos"]],
-  [["Holanda","Bayern"],["Enfermos F.C.","Inter de Miami"],["Manchester C.","Spurs"],["Santa F.C.","Legión F.C."],["Francia 98","Arsenal"],["Cuervos","Alianza"],["Roots","Juventus"]],
-  [["Bayern","Enfermos F.C."],["Portales Club","Holanda"],["Inter de Miami","Manchester C."],["Spurs","Santa F.C."],["Legión F.C.","Francia 98"],["Arsenal","Cuervos"],["Alianza","Roots"]],
-  [["Manchester C.","Bayern"],["Enfermos F.C.","Portales Club"],["Santa F.C.","Inter de Miami"],["Francia 98","Spurs"],["Cuervos","Legión F.C."],["Roots","Arsenal"],["Juventus","Alianza"]],
-  [["Bayern","Santa F.C."],["Portales Club","Manchester C."],["Holanda","Enfermos F.C."],["Inter de Miami","Francia 98"],["Spurs","Cuervos"],["Legión F.C.","Roots"],["Arsenal","Juventus"]],
-  [["Francia 98","Bayern"],["Santa F.C.","Portales Club"],["Manchester C.","Holanda"],["Cuervos","Inter de Miami"],["Roots","Spurs"],["Juventus","Legión F.C."],["Alianza","Arsenal"]],
-  [["Bayern","Cuervos"],["Portales Club","Francia 98"],["Holanda","Santa F.C."],["Enfermos F.C.","Manchester C."],["Inter de Miami","Roots"],["Spurs","Juventus"],["Legión F.C.","Alianza"]]
+  [["Alianza", "Portales Club"],["Inter de Miami", "Palmeiras"],["Legión F.C.", "Cuervos"],["Spurs", "Enfermos F.C."],["Roots", "Holanda"],["Francia 98", "Arsenal"],["Santa F.C.", "Juventus"],["Bayern", "Manchester C."]],
+  [["Bayern", "Alianza"],["Portales Club", "Inter de Miami"],["Palmeiras", "Legión F.C."],["Cuervos", "Spurs"],["Enfermos F.C.", "Roots"],["Holanda", "Francia 98"],["Arsenal", "Santa F.C."],["Manchester C.", "Juventus"]],
+  [["Inter de Miami", "Bayern"],["Legión F.C.", "Portales Club"],["Spurs", "Palmeiras"],["Roots", "Cuervos"],["Francia 98", "Enfermos F.C."],["Santa F.C.", "Holanda"],["Juventus", "Arsenal"],["Alianza", "Manchester C."]],
+  [["Bayern", "Legión F.C."],["Alianza", "Inter de Miami"],["Portales Club", "Spurs"],["Palmeiras", "Roots"],["Cuervos", "Francia 98"],["Enfermos F.C.", "Santa F.C."],["Holanda", "Juventus"],["Manchester C.", "Arsenal"]],
+  [["Spurs", "Bayern"],["Legión F.C.", "Alianza"],["Roots", "Portales Club"],["Francia 98", "Palmeiras"],["Santa F.C.", "Cuervos"],["Juventus", "Enfermos F.C."],["Arsenal", "Holanda"],["Inter de Miami", "Manchester C."]],
+  [["Bayern", "Roots"],["Alianza", "Spurs"],["Inter de Miami", "Legión F.C."],["Portales Club", "Francia 98"],["Palmeiras", "Santa F.C."],["Cuervos", "Juventus"],["Enfermos F.C.", "Arsenal"],["Manchester C.", "Holanda"]],
+  [["Francia 98", "Bayern"],["Roots", "Alianza"],["Spurs", "Inter de Miami"],["Santa F.C.", "Portales Club"],["Juventus", "Palmeiras"],["Arsenal", "Cuervos"],["Holanda", "Enfermos F.C."],["Legión F.C.", "Manchester C."]],
+  [["Bayern", "Santa F.C."],["Alianza", "Francia 98"],["Inter de Miami", "Roots"],["Legión F.C.", "Spurs"],["Portales Club", "Juventus"],["Palmeiras", "Arsenal"],["Cuervos", "Holanda"],["Manchester C.", "Enfermos F.C."]],
+  [["Juventus", "Bayern"],["Santa F.C.", "Alianza"],["Francia 98", "Inter de Miami"],["Roots", "Legión F.C."],["Arsenal", "Portales Club"],["Holanda", "Palmeiras"],["Enfermos F.C.", "Cuervos"],["Spurs", "Manchester C."]],
+  [["Bayern", "Arsenal"],["Alianza", "Juventus"],["Inter de Miami", "Santa F.C."],["Legión F.C.", "Francia 98"],["Spurs", "Roots"],["Portales Club", "Holanda"],["Palmeiras", "Enfermos F.C."],["Manchester C.", "Cuervos"]],
+  [["Holanda", "Bayern"],["Arsenal", "Alianza"],["Juventus", "Inter de Miami"],["Santa F.C.", "Legión F.C."],["Francia 98", "Spurs"],["Enfermos F.C.", "Portales Club"],["Cuervos", "Palmeiras"],["Roots", "Manchester C."]],
+  [["Bayern", "Enfermos F.C."],["Alianza", "Holanda"],["Inter de Miami", "Arsenal"],["Legión F.C.", "Juventus"],["Spurs", "Santa F.C."],["Roots", "Francia 98"],["Portales Club", "Cuervos"],["Manchester C.", "Palmeiras"]],
+  [["Cuervos", "Bayern"],["Enfermos F.C.", "Alianza"],["Holanda", "Inter de Miami"],["Arsenal", "Legión F.C."],["Juventus", "Spurs"],["Santa F.C.", "Roots"],["Palmeiras", "Portales Club"],["Francia 98", "Manchester C."]],
+  [["Bayern", "Palmeiras"],["Alianza", "Cuervos"],["Inter de Miami", "Enfermos F.C."],["Legión F.C.", "Holanda"],["Spurs", "Arsenal"],["Roots", "Juventus"],["Francia 98", "Santa F.C."],["Manchester C.", "Portales Club"]],
+  [["Portales Club", "Bayern"],["Palmeiras", "Alianza"],["Cuervos", "Inter de Miami"],["Enfermos F.C.", "Legión F.C."],["Holanda", "Spurs"],["Arsenal", "Roots"],["Juventus", "Francia 98"],["Santa F.C.", "Manchester C."]]
 ];
 const TEAMS = [...new Set(JORNADAS.flat(2))].sort((a, b) => a.localeCompare(b, "es"));
-const STORAGE_KEY = "jornadas-1-8-resultados";
-const TAB_KEY = "jornadas-1-8-tab";
+// Clave nueva: el calendario cambió (16 equipos, 15 jornadas) y los datos del rol anterior no corresponden.
+const STORAGE_KEY = "liga-16-equipos-resultados";
+const TAB_KEY = "liga-16-equipos-tab";
 const LIGUILLA = JORNADAS.length; // índice de la pestaña de liguilla
 const ROUNDS = [
   { key: "qf", name: "Cuartos de final", n: 4 },
@@ -524,10 +532,10 @@ document.getElementById("btnCsv").onclick = () => {
     rows.push([r.name, h ? h.name : "", txt(m[0]), txt(m[1]), a ? a.name : "", txt(m[2]), txt(m[3])]);
   } });
   const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-  download("resultados-jornadas-1-8.csv", "﻿" + csv, "text/csv");
+  download("resultados-jornadas-1-15.csv", "﻿" + csv, "text/csv");
 };
 document.getElementById("btnJson").onclick = () =>
-  download("respaldo-jornadas-1-8.json", JSON.stringify(backup()), "application/json");
+  download("respaldo-jornadas-1-15.json", JSON.stringify(backup()), "application/json");
 document.getElementById("fileImport").onchange = async e => {
   const f = e.target.files[0];
   if (!f) return;
